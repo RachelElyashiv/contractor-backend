@@ -3,8 +3,8 @@
   "version": "1.0.0",
   "description": "Backend for Contractor Management App",
 "scripts": {
-  "build": "echo build done",
-"start": "node -e \"require('ts-node').register({project: './tsconfig.json'}); require('./src/main.ts')\"",
+  "build": "node_modules/.bin/tsc -p tsconfig.json",
+  "start": "node dist/main.js",
   "start:dev": "npx ts-node -r tsconfig-paths/register src/main.ts"
 },
   "dependencies": {
