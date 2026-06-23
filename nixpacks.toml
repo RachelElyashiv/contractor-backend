@@ -1,0 +1,4 @@
+[phases.build] 
+cmds = [] 
+[start] 
+cmd = "npx ts-node -r tsconfig-paths/register src/main.ts" 
