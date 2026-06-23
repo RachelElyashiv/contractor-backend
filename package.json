@@ -2,12 +2,11 @@
   "name": "contractor-backend",
   "version": "1.0.0",
   "description": "Backend for Contractor Management App",
-  "scripts": {
- "build": "npm install && npx tsc -p tsconfig.json",
-"start": "npx ts-node -r tsconfig-paths/register src/main.ts",
-    "start:dev": "npx ts-node -r tsconfig-paths/register src/main.ts",
-    "typecheck": "npx tsc --noEmit"
-  },
+"scripts": {
+  "build": "npx --yes tsc@5 -p tsconfig.json",
+  "start": "node dist/main",
+  "start:dev": "npx ts-node -r tsconfig-paths/register src/main.ts"
+},
   "dependencies": {
     "@nestjs/common": "^10.0.0",
     "@nestjs/config": "^3.0.0",
