@@ -4,7 +4,7 @@
   "description": "Backend for Contractor Management App",
 "scripts": {
   "build": "echo build done",
-  "start": "npx ts-node -r tsconfig-paths/register src/main.ts",
+"start": "node -e \"require('ts-node').register({project: './tsconfig.json'}); require('./src/main.ts')\"",
   "start:dev": "npx ts-node -r tsconfig-paths/register src/main.ts"
 },
   "dependencies": {
