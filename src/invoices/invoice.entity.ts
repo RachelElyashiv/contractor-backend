@@ -57,7 +57,7 @@ export class Invoice {
   @Column({ type: 'date', nullable: true })
   paidDate: Date;
 
-  @ManyToOne(() => Project, (p) => p.invoices, { nullable: true })
+  @ManyToOne(() => Project, (p) => p.invoices, { nullable: true, onDelete: 'SET NULL' })
   @JoinColumn({ name: 'projectId' })
   project: Project;
 
