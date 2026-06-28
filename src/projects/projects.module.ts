@@ -6,9 +6,10 @@ import { ProjectsService } from './projects.service';
 import { ProjectsController } from './projects.controller';
 import { Photo } from '../photos/photo.entity';
 import { Material } from '../materials/material.entity';
+import { Invoice } from '../invoices/invoice.entity';
 
 @Module({
-    imports: [TypeOrmModule.forFeature([Project, Task, Photo, Material])],
+    imports: [TypeOrmModule.forFeature([Project, Task, Photo, Material, Invoice])],
     providers: [ProjectsService],
     controllers: [ProjectsController],
     exports: [ProjectsService],

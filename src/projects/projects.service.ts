@@ -5,6 +5,7 @@ import { Project } from './project.entity';
 import { Task } from './task.entity';
 import { Photo } from '../photos/photo.entity';
 import { Material } from '../materials/material.entity';
+import { Invoice } from '../invoices/invoice.entity';
 
 @Injectable()
 export class ProjectsService {
@@ -13,6 +14,7 @@ export class ProjectsService {
         @InjectRepository(Task) private taskRepo: Repository<Task>,
         @InjectRepository(Photo) private photoRepo: Repository<Photo>,
         @InjectRepository(Material) private materialRepo: Repository<Material>,
+        @InjectRepository(Invoice) private invoiceRepo: Repository<Invoice>,
     ) { }
 
     async findAll(ownerId: string) {
@@ -46,6 +48,7 @@ export class ProjectsService {
 
     async remove(id: string, ownerId: string) {
         const project = await this.findOne(id, ownerId);
+        await this.invoiceRepo.update({ projectId: id }, { projectId: null });
         await this.projectRepo.remove(project);
         return { message: 'פרויקט נמחק' };
     }
