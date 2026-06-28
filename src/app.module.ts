@@ -1,7 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
-
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { ProjectsModule } from './projects/projects.module';
@@ -10,7 +9,6 @@ import { MaterialsModule } from './materials/materials.module';
 import { InvoicesModule } from './invoices/invoices.module';
 import { ExpensesModule } from './expenses/expenses.module';
 import { PhotosModule } from './photos/photos.module';
-
 import { User } from './users/user.entity';
 import { Project } from './projects/project.entity';
 import { Task } from './projects/task.entity';
@@ -21,11 +19,9 @@ import { Invoice } from './invoices/invoice.entity';
 import { InvoiceItem } from './invoices/invoice-item.entity';
 import { Expense } from './expenses/expense.entity';
 import { Photo } from './photos/photo.entity';
-
 @Module({
     imports: [
         ConfigModule.forRoot({ isGlobal: true }),
-
         TypeOrmModule.forRootAsync({
             imports: [ConfigModule],
             inject: [ConfigService],
@@ -40,11 +36,10 @@ import { Photo } from './photos/photo.entity';
                     User, Project, Task, Worker, Attendance,
                     Material, Invoice, InvoiceItem, Expense, Photo,
                 ],
-                synchronize: config.get('NODE_ENV') !== 'production',
+                synchronize: true,
                 logging: false,
             }),
         }),
-
         AuthModule,
         UsersModule,
         ProjectsModule,
