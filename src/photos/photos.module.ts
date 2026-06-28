@@ -48,6 +48,9 @@ export class Photo {
     @Column({ nullable: true })
     projectId: string;
 
+    @Column({ nullable: true })
+    apartmentId: string;
+
     @ManyToOne(() => Project, (p) => p.photos, { nullable: true, onDelete: 'SET NULL' })
     @JoinColumn({ name: 'projectId' })
     project: Project;
@@ -70,20 +73,22 @@ export class Photo {
 export class PhotosService {
     constructor(@InjectRepository(Photo) private repo: Repository<Photo>) { }
 
-    findAll(ownerId: string, projectId?: string) {
+    findAll(ownerId: string, projectId?: string, apartmentId?: string) {
         const where: any = { ownerId };
-        if (projectId) where.projectId = projectId;
+        if (apartmentId) where.apartmentId = apartmentId;
+        else if (projectId) where.projectId = projectId;
         return this.repo.find({ where, order: { createdAt: 'DESC' } });
     }
 
-    async savePhotos(files: Express.Multer.File[], ownerId: string, projectId?: string, caption?: string) {
+    async savePhotos(files: Express.Multer.File[], ownerId: string, projectId?: string, caption?: string, apartmentId?: string) {
         const photos = files.map((file: any) =>
             this.repo.create({
                 filename: file.originalname,
-                url: file.path,           // ה-URL המלא מ-Cloudinary
-                publicId: file.filename,  // ה-public_id למחיקה
+                url: file.path,
+                publicId: file.filename,
                 ownerId,
                 projectId: projectId || null,
+                apartmentId: apartmentId || null,
                 caption: caption || null,
                 takenAt: new Date(),
             }),
@@ -122,8 +127,12 @@ export class PhotosController {
     constructor(private photosService: PhotosService) { }
 
     @Get()
-    findAll(@Request() req, @Query('projectId') projectId?: string) {
-        return this.photosService.findAll(req.user.id, projectId);
+    findAll(
+        @Request() req,
+        @Query('projectId') projectId?: string,
+        @Query('apartmentId') apartmentId?: string,
+    ) {
+        return this.photosService.findAll(req.user.id, projectId, apartmentId);
     }
 
     @Post('upload')
@@ -138,8 +147,9 @@ export class PhotosController {
         @Request() req,
         @Body('projectId') projectId?: string,
         @Body('caption') caption?: string,
+        @Body('apartmentId') apartmentId?: string,
     ) {
-        return this.photosService.savePhotos(files, req.user.id, projectId, caption);
+        return this.photosService.savePhotos(files, req.user.id, projectId, caption, apartmentId);
     }
 
     @Delete(':id')

@@ -25,6 +25,9 @@ export class Attendance {
   projectId: string;
 
   @Column({ nullable: true })
+  apartmentId: string;
+
+  @Column({ nullable: true })
   notes: string;
 
   @Column({ default: 'present' })

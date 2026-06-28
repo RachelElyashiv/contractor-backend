@@ -22,6 +22,10 @@ export class MaterialsService {
         return this.repo.find({ where: { projectId, ownerId }, order: { name: 'ASC' } });
     }
 
+    findByApartment(apartmentId: string, ownerId: string) {
+        return this.repo.find({ where: { apartmentId, ownerId }, order: { name: 'ASC' } });
+    }
+
     async findOne(id: string, ownerId: string) {
         const m = await this.repo.findOne({ where: { id, ownerId } });
         if (!m) throw new NotFoundException('חומר לא נמצא');
@@ -75,7 +79,12 @@ export class MaterialsController {
     constructor(private materialsService: MaterialsService) { }
 
     @Get()
-    findAll(@Request() req, @Query('projectId') projectId?: string) {
+    findAll(
+        @Request() req,
+        @Query('projectId') projectId?: string,
+        @Query('apartmentId') apartmentId?: string,
+    ) {
+        if (apartmentId) return this.materialsService.findByApartment(apartmentId, req.user.id);
         if (projectId) return this.materialsService.findByProject(projectId, req.user.id);
         return this.materialsService.findAll(req.user.id);
     }

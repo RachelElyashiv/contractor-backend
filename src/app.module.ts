@@ -9,6 +9,7 @@ import { MaterialsModule } from './materials/materials.module';
 import { InvoicesModule } from './invoices/invoices.module';
 import { ExpensesModule } from './expenses/expenses.module';
 import { PhotosModule } from './photos/photos.module';
+import { ApartmentsModule } from './apartments/apartments.module';
 import { User } from './users/user.entity';
 import { Project } from './projects/project.entity';
 import { Task } from './projects/task.entity';
@@ -19,6 +20,7 @@ import { Invoice } from './invoices/invoice.entity';
 import { InvoiceItem } from './invoices/invoice-item.entity';
 import { Expense } from './expenses/expense.entity';
 import { Photo } from './photos/photo.entity';
+import { Apartment } from './apartments/apartments.module';
 @Module({
     imports: [
         ConfigModule.forRoot({ isGlobal: true }),
@@ -34,7 +36,7 @@ import { Photo } from './photos/photo.entity';
                 database: config.get('DB_NAME', 'contractor_db'),
                 entities: [
                     User, Project, Task, Worker, Attendance,
-                    Material, Invoice, InvoiceItem, Expense, Photo,
+                    Material, Invoice, InvoiceItem, Expense, Photo, Apartment,
                 ],
                 synchronize: true,
                 logging: false,
@@ -48,6 +50,7 @@ import { Photo } from './photos/photo.entity';
         InvoicesModule,
         ExpensesModule,
         PhotosModule,
+        ApartmentsModule,
     ],
 })
 export class AppModule { }

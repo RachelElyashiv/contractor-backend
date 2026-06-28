@@ -16,8 +16,12 @@ export class WorkersController {
   }
 
   @Get('attendance/today')
-  getAttendanceToday(@Request() req) {
-    return this.workersService.getAttendanceToday(req.user.id);
+  getAttendanceToday(
+    @Request() req,
+    @Query('projectId') projectId?: string,
+    @Query('apartmentId') apartmentId?: string,
+  ) {
+    return this.workersService.getAttendanceToday(req.user.id, projectId, apartmentId);
   }
 
   @Get('attendance/monthly')

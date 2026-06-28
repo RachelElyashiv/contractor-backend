@@ -40,6 +40,9 @@ export class Material {
     projectId: string;
 
     @Column({ nullable: true })
+    apartmentId: string;
+
+    @Column({ nullable: true })
     category: string;
 
     @Column({ default: 'pending' })

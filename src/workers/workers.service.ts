@@ -43,14 +43,17 @@ export class WorkersService {
   }
 
   // Attendance
-  async getAttendanceToday(ownerId: string) {
+  async getAttendanceToday(ownerId: string, projectId?: string, apartmentId?: string) {
     const today = new Date().toISOString().split('T')[0];
     const workers = await this.findAll(ownerId);
-    const workerIds = workers.map((w) => w.id);
-    if (!workerIds.length) return [];
+    if (!workers.length) return [];
+
+    const where: any = { date: today as any };
+    if (projectId) where.projectId = projectId;
+    if (apartmentId) where.apartmentId = apartmentId;
 
     const attendances = await this.attendanceRepo.find({
-      where: { date: today as any },
+      where,
       relations: { worker: true },
     });
 
