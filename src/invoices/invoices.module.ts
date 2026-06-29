@@ -13,7 +13,10 @@ import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 
 @Injectable()
 export class InvoicesService {
-  constructor(@InjectRepository(Invoice) private repo: Repository<Invoice>) {}
+  constructor(
+    @InjectRepository(Invoice) private repo: Repository<Invoice>,
+    @InjectRepository(InvoiceItem) private itemRepo: Repository<InvoiceItem>,
+  ) {}
 
   findAll(ownerId: string) {
     return this.repo.find({
@@ -33,16 +36,23 @@ export class InvoicesService {
     const count = await this.repo.count({ where: { ownerId } });
     const invoiceNumber = `INV-${new Date().getFullYear()}-${String(count + 1).padStart(4, '0')}`;
 
-    const subtotal = (data.items || []).reduce(
-      (sum: number, item: any) => sum + item.quantity * item.unitPrice, 0,
-    );
+    const { items: rawItems, ...invoiceData } = data;
+    const items = (rawItems || []).map((item: any) => this.itemRepo.create({
+      description: item.description || '-',
+      quantity: Number(item.quantity) || 1,
+      unitPrice: Number(item.unitPrice) || 0,
+      total: (Number(item.quantity) || 1) * (Number(item.unitPrice) || 0),
+    }));
+
+    const subtotal = items.reduce((sum: number, item: any) => sum + item.quantity * item.unitPrice, 0);
     const taxAmount = subtotal * ((data.taxPercent || 17) / 100);
     const total = subtotal + taxAmount;
 
     const invoice = this.repo.create({
-      ...data,
+      ...invoiceData,
       invoiceNumber,
       ownerId,
+      items,
       subtotal,
       taxAmount,
       total,
