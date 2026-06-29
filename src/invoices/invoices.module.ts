@@ -37,28 +37,38 @@ export class InvoicesService {
     const invoiceNumber = `INV-${new Date().getFullYear()}-${String(count + 1).padStart(4, '0')}`;
 
     const { items: rawItems, ...invoiceData } = data;
-    const items = (rawItems || []).map((item: any) => this.itemRepo.create({
-      description: item.description || '-',
-      quantity: Number(item.quantity) || 1,
-      unitPrice: Number(item.unitPrice) || 0,
-      total: (Number(item.quantity) || 1) * (Number(item.unitPrice) || 0),
-    }));
+    const rawItemsArr = rawItems || [];
 
-    const subtotal = items.reduce((sum: number, item: any) => sum + item.quantity * item.unitPrice, 0);
-    const taxAmount = subtotal * ((data.taxPercent || 17) / 100);
+    const subtotal = rawItemsArr.reduce((sum: number, item: any) =>
+      sum + (Number(item.quantity) || 1) * (Number(item.unitPrice) || 0), 0);
+    const taxAmount = subtotal * ((Number(data.taxPercent) || 17) / 100);
     const total = subtotal + taxAmount;
 
+    // Save invoice first to get its ID
     const invoice = this.repo.create({
       ...invoiceData,
       invoiceNumber,
       ownerId,
-      items,
       subtotal,
       taxAmount,
       total,
       issueDate: data.issueDate || new Date(),
     });
-    return this.repo.save(invoice);
+    const saved = await this.repo.save(invoice);
+
+    // Save items with explicit invoiceId
+    if (rawItemsArr.length > 0) {
+      const items = rawItemsArr.map((item: any) => this.itemRepo.create({
+        invoiceId: saved.id,
+        description: item.description || '-',
+        quantity: Number(item.quantity) || 1,
+        unitPrice: Number(item.unitPrice) || 0,
+        total: (Number(item.quantity) || 1) * (Number(item.unitPrice) || 0),
+      }));
+      await this.itemRepo.save(items);
+    }
+
+    return this.findOne(saved.id, ownerId);
   }
 
   async update(id: string, data: Partial<Invoice>, ownerId: string) {
