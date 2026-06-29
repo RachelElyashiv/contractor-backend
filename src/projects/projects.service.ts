@@ -47,9 +47,10 @@ export class ProjectsService {
     }
 
     async remove(id: string, ownerId: string) {
-        const project = await this.findOne(id, ownerId);
+        const project = await this.projectRepo.findOne({ where: { id, ownerId } });
+        if (!project) throw new NotFoundException('פרויקט לא נמצא');
         await this.invoiceRepo.update({ projectId: id }, { projectId: null });
-        await this.projectRepo.remove(project);
+        await this.projectRepo.delete({ id, ownerId });
         return { message: 'פרויקט נמחק' };
     }
 
