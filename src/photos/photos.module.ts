@@ -115,10 +115,11 @@ export class PhotosService {
 // אחסון Cloudinary
 const storage = new CloudinaryStorage({
     cloudinary: cloudinary,
-    params: {
+    params: (req, file) => ({
         folder: 'contractor-app',
-        allowed_formats: ['jpg', 'jpeg', 'png', 'gif', 'webp', 'heic'],
-    } as any,
+        allowed_formats: ['jpg', 'jpeg', 'png', 'gif', 'webp', 'heic', 'pdf'],
+        resource_type: file.mimetype === 'application/pdf' ? 'raw' : 'image',
+    }),
 });
 
 @Controller('photos')
@@ -142,14 +143,20 @@ export class PhotosController {
             limits: { fileSize: 50 * 1024 * 1024 },
         }),
     )
-    uploadPhotos(
+    async uploadPhotos(
         @UploadedFiles() files: Express.Multer.File[],
         @Request() req,
         @Body('projectId') projectId?: string,
         @Body('caption') caption?: string,
         @Body('apartmentId') apartmentId?: string,
     ) {
-        return this.photosService.savePhotos(files, req.user.id, projectId, caption, apartmentId);
+        try {
+            if (!files || files.length === 0) return [];
+            return await this.photosService.savePhotos(files, req.user.id, projectId, caption, apartmentId);
+        } catch (e) {
+            console.error('Upload error:', e?.message || e);
+            throw e;
+        }
     }
 
     @Delete(':id')
