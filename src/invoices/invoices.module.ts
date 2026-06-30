@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Invoice, InvoiceStatus } from './invoice.entity';
 import { InvoiceItem } from './invoice-item.entity';
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, HttpException, HttpStatus } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import {
@@ -33,42 +33,58 @@ export class InvoicesService {
   }
 
   async create(data: any, ownerId: string) {
-    const count = await this.repo.count({ where: { ownerId } });
-    const invoiceNumber = `INV-${new Date().getFullYear()}-${String(count + 1).padStart(4, '0')}`;
+    try {
+      // Build a unique invoice number — use global count + timestamp to avoid
+      // collisions when multiple owners exist or invoices have been deleted.
+      const globalCount = await this.repo.count();
+      const year = new Date().getFullYear();
+      const ts = Date.now().toString().slice(-4);
+      let invoiceNumber = `INV-${year}-${String(globalCount + 1).padStart(4, '0')}`;
+      const existing = await this.repo.findOne({ where: { invoiceNumber } });
+      if (existing) {
+        invoiceNumber = `INV-${year}-${String(globalCount + 1).padStart(4, '0')}-${ts}`;
+      }
 
-    const { items: rawItems, ...invoiceData } = data;
-    const rawItemsArr = rawItems || [];
+      const { items: rawItems, ...invoiceData } = data;
+      const rawItemsArr = rawItems || [];
 
-    const subtotal = rawItemsArr.reduce((sum: number, item: any) =>
-      sum + (Number(item.quantity) || 1) * (Number(item.unitPrice) || 0), 0);
-    const taxAmount = subtotal * ((Number(data.taxPercent) || 17) / 100);
-    const total = subtotal + taxAmount;
+      const subtotal = rawItemsArr.reduce((sum: number, item: any) =>
+        sum + (Number(item.quantity) || 1) * (Number(item.unitPrice) || 0), 0);
+      const taxAmount = subtotal * ((Number(data.taxPercent) || 17) / 100);
+      const total = subtotal + taxAmount;
 
-    // Save invoice first to get its ID
-    const invoice = this.repo.create({
-      ...invoiceData,
-      invoiceNumber,
-      ownerId,
-      subtotal,
-      taxAmount,
-      total,
-      issueDate: data.issueDate || new Date(),
-    });
-    const saved = await this.repo.save(invoice) as unknown as Invoice;
+      // Save invoice first to get its ID
+      const invoice = this.repo.create({
+        ...invoiceData,
+        invoiceNumber,
+        ownerId,
+        subtotal,
+        taxAmount,
+        total,
+        clientName: data.clientName || 'לקוח',
+        issueDate: data.issueDate || new Date(),
+      });
+      const saved = await this.repo.save(invoice) as unknown as Invoice;
 
-    // Save items with explicit invoiceId
-    if (rawItemsArr.length > 0) {
-      const items = rawItemsArr.map((item: any) => this.itemRepo.create({
-        invoiceId: saved.id,
-        description: item.description || '-',
-        quantity: Number(item.quantity) || 1,
-        unitPrice: Number(item.unitPrice) || 0,
-        total: (Number(item.quantity) || 1) * (Number(item.unitPrice) || 0),
-      }));
-      await this.itemRepo.save(items);
+      // Save items with explicit invoiceId
+      if (rawItemsArr.length > 0) {
+        const items = rawItemsArr.map((item: any) => this.itemRepo.create({
+          invoiceId: saved.id,
+          description: item.description || '-',
+          quantity: Number(item.quantity) || 1,
+          unitPrice: Number(item.unitPrice) || 0,
+          total: (Number(item.quantity) || 1) * (Number(item.unitPrice) || 0),
+        }));
+        await this.itemRepo.save(items);
+      }
+
+      return this.findOne(saved.id, ownerId);
+    } catch (err) {
+      throw new HttpException(
+        { message: 'שגיאה ביצירת חשבונית', detail: String((err as any)?.message || err) },
+        HttpStatus.BAD_REQUEST,
+      );
     }
-
-    return this.findOne(saved.id, ownerId);
   }
 
   async update(id: string, data: Partial<Invoice>, ownerId: string) {
