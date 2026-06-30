@@ -39,7 +39,7 @@ import { Apartment } from './apartments/apartments.module';
                     Material, Invoice, InvoiceItem, Expense, Photo, Apartment,
                 ],
                 synchronize: true,
-                logging: false,
+                logging: ['error', 'warn'],
             }),
         }),
         AuthModule,
