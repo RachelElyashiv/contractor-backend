@@ -33,16 +33,16 @@ export class Invoice {
   @Column({ nullable: true })
   clientEmail: string;
 
-  @Column({ type: 'decimal', precision: 12, scale: 2, default: 0 })
+  @Column({ type: 'decimal', precision: 20, scale: 2, default: 0 })
   subtotal: number;
 
   @Column({ type: 'decimal', precision: 5, scale: 2, default: 17 })
   taxPercent: number;
 
-  @Column({ type: 'decimal', precision: 12, scale: 2, default: 0 })
+  @Column({ type: 'decimal', precision: 20, scale: 2, default: 0 })
   taxAmount: number;
 
-  @Column({ type: 'decimal', precision: 12, scale: 2, default: 0 })
+  @Column({ type: 'decimal', precision: 20, scale: 2, default: 0 })
   total: number;
 
   @Column({ nullable: true })

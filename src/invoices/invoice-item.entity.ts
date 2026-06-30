@@ -18,10 +18,10 @@ export class InvoiceItem {
   @Column({ nullable: true })
   unit: string;
 
-  @Column({ type: 'decimal', precision: 10, scale: 2 })
+  @Column({ type: 'decimal', precision: 20, scale: 2 })
   unitPrice: number;
 
-  @Column({ type: 'decimal', precision: 10, scale: 2 })
+  @Column({ type: 'decimal', precision: 20, scale: 2 })
   total: number;
 
   @ManyToOne(() => Invoice, (inv) => inv.items, { onDelete: 'CASCADE' })
