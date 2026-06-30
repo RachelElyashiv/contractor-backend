@@ -54,7 +54,7 @@ export class InvoicesService {
       total,
       issueDate: data.issueDate || new Date(),
     });
-    const saved = await this.repo.save(invoice);
+    const saved = await this.repo.save(invoice) as unknown as Invoice;
 
     // Save items with explicit invoiceId
     if (rawItemsArr.length > 0) {
