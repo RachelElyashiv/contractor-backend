@@ -28,6 +28,9 @@ export class Apartment {
   @Column({ nullable: true })
   description: string;
 
+  @Column({ type: 'int', default: 0 })
+  sortOrder: number;
+
   @Column({ type: 'decimal', precision: 5, scale: 2, default: 0 })
   progressPercent: number;
 
@@ -53,11 +56,11 @@ export class ApartmentsService {
   constructor(@InjectRepository(Apartment) private repo: Repository<Apartment>) {}
 
   findAll(ownerId: string) {
-    return this.repo.find({ where: { ownerId }, order: { name: 'ASC' } });
+    return this.repo.find({ where: { ownerId }, order: { sortOrder: 'ASC', createdAt: 'ASC' } });
   }
 
   findByProject(projectId: string, ownerId: string) {
-    return this.repo.find({ where: { projectId, ownerId }, order: { name: 'ASC' } });
+    return this.repo.find({ where: { projectId, ownerId }, order: { sortOrder: 'ASC', createdAt: 'ASC' } });
   }
 
   async findOne(id: string, ownerId: string) {
@@ -66,8 +69,9 @@ export class ApartmentsService {
     return apt;
   }
 
-  create(data: Partial<Apartment>, ownerId: string) {
-    const apt = this.repo.create({ ...data, ownerId });
+  async create(data: Partial<Apartment>, ownerId: string) {
+    const count = await this.repo.count({ where: { projectId: data.projectId as any, ownerId } });
+    const apt = this.repo.create({ ...data, ownerId, sortOrder: count + 1 });
     return this.repo.save(apt);
   }
 
