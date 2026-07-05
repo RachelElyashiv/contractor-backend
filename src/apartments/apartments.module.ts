@@ -71,7 +71,10 @@ export class ApartmentsService {
 
   async create(data: Partial<Apartment>, ownerId: string) {
     const count = await this.repo.count({ where: { projectId: data.projectId as any, ownerId } });
-    const apt = this.repo.create({ ...data, ownerId, sortOrder: count + 1 });
+    const nextNum = count + 1;
+    // Auto-name apartment if no name provided
+    const name = data.name?.trim() || `דירה ${nextNum}`;
+    const apt = this.repo.create({ ...data, name, ownerId, sortOrder: nextNum, number: data.number || String(nextNum) });
     return this.repo.save(apt);
   }
 
