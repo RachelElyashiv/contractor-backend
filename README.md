@@ -255,14 +255,33 @@ src/
 
 ---
 
-## Production
+## 🚀 Production Deployment
 
-לפרודקשן מומלץ:
-- **Railway** או **Render** לאירוח (חינמי לתחילה)
-- **Supabase** לפוסטגרס מנוהל
-- **Cloudinary** לתמונות במקום Multer מקומי
+### Google Cloud Run (Recommended) ⭐
+
+```bash
+# התקנו gcloud CLI
+brew install --cask google-cloud-sdk
+
+# התחברו
+gcloud init
+gcloud auth login
+
+# הרץ את ה-deployment script (אוטומטי!)
+chmod +x deploy-gcloud.sh
+./deploy-gcloud.sh
+```
+
+הנחיות מלאות: [GOOGLE_CLOUD_SETUP.md](./GOOGLE_CLOUD_SETUP.md)
+
+### או Build ידני
 
 ```bash
 npm run build
 npm start
 ```
+
+**ראו גם:**
+- [DEPLOYMENT.md](./DEPLOYMENT.md) - Heroku, AWS, GCP alternatives
+- [DATABASE_SETUP.md](./DATABASE_SETUP.md) - PostgreSQL setup
+- [GOOGLE_CLOUD_SETUP.md](./GOOGLE_CLOUD_SETUP.md) - Google Cloud Run details
