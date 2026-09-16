@@ -29,8 +29,9 @@ import { Apartment } from './apartments/apartments.module';
             inject: [ConfigService],
             useFactory: (config: ConfigService) => ({
                 type: 'postgres',
-                host: config.get('DB_HOST', 'localhost'),
-                port: config.get<number>('DB_PORT', 5432),
+                ...(config.get('DB_SOCKET_PATH')
+              ? { host: config.get('DB_SOCKET_PATH') }
+              : { host: config.get('DB_HOST', 'localhost'), port: config.get<number>('DB_PORT', 5432) }),
                 username: config.get('DB_USERNAME', 'postgres'),
                 password: config.get('DB_PASSWORD', 'password'),
                 database: config.get('DB_NAME', 'contractor_db'),
@@ -38,9 +39,9 @@ import { Apartment } from './apartments/apartments.module';
                     User, Project, Task, Worker, Attendance,
                     Material, Invoice, InvoiceItem, Expense, Photo, Apartment,
                 ],
-                synchronize: config.get('NODE_ENV') !== 'production',
+                synchronize: config.get('NODE_ENV') !== 'production' || config.get('DB_SYNC') === 'true',
                 logging: config.get('NODE_ENV') !== 'production' ? ['error', 'warn', 'query'] : ['error', 'warn'],
-                ssl: config.get('NODE_ENV') === 'production' ? { rejectUnauthorized: false } : false,
+                ssl: config.get('NODE_ENV') === 'production' && !config.get('DB_SOCKET_PATH') ? { rejectUnauthorized: false } : false,
             }),
         }),
         AuthModule,

@@ -64,7 +64,7 @@ if ! gcloud sql instances describe $DB_INSTANCE &> /dev/null; then
         --region=$REGION \
         --availability-type=regional \
         --backup-start-time=03:00 \
-        --enable-bin-log
+       
     echo -e "${GREEN}✓ Cloud SQL instance created${NC}"
 else
     echo -e "${GREEN}✓ Cloud SQL instance exists${NC}"
@@ -115,9 +115,11 @@ gcloud run deploy $SERVICE_NAME \
   --cpu=1 \
   --timeout=300 \
   --max-instances=10 \
+  --add-cloudsql-instances=$PROJECT_ID:$REGION:$DB_INSTANCE \
   --set-env-vars=\
 NODE_ENV=production,\
 DB_HOST=$DB_IP,\
+DB_SOCKET_PATH=/cloudsql/$PROJECT_ID:$REGION:$DB_INSTANCE,\
 DB_PORT=5432,\
 DB_USERNAME=postgres,\
 DB_PASSWORD=$DB_PASSWORD,\
@@ -127,7 +129,6 @@ JWT_EXPIRES_IN=7d,\
 CLOUDINARY_CLOUD_NAME=$CLOUDINARY_CLOUD_NAME,\
 CLOUDINARY_API_KEY=$CLOUDINARY_API_KEY,\
 CLOUDINARY_API_SECRET=$CLOUDINARY_API_SECRET,\
-PORT=3000
 
 echo -e "${GREEN}✓ Service deployed${NC}"
 
