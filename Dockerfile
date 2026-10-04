@@ -5,12 +5,17 @@ WORKDIR /app
 
 COPY package*.json ./
 
-RUN npm ci --only=production && \
-    npm cache clean --force
+# The build needs the Nest CLI and TypeScript, which are devDependencies.
+# Installing with --only=production here meant `nest build` was never on PATH
+# and the image could not be built at all.
+RUN npm ci
 
 COPY . .
 
 RUN npm run build
+
+# Drop the build tooling again so the runtime image stays small
+RUN npm prune --omit=dev && npm cache clean --force
 
 # Runtime stage
 FROM node:20-alpine

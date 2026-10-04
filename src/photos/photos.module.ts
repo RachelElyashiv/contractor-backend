@@ -90,7 +90,7 @@ export class PhotosService {
     async savePhotos(files: Express.Multer.File[], ownerId: string, projectId?: string, caption?: string, apartmentId?: string) {
         const photos = files.map((file: any) =>
             this.repo.create({
-                filename: file.originalname,
+                filename: decodeFileName(file.originalname),
                 url: file.path,
                 publicId: file.filename,
                 ownerId,
@@ -121,13 +121,28 @@ export class PhotosService {
     }
 }
 
-// שם קובץ בטוח ל-Cloudinary: בלי סיומת, בלי תווים שמשברים כתובת
-function safePublicId(originalname: string) {
-    const ext = extname(originalname || '');
-    const base = (originalname || 'file').slice(0, originalname.length - ext.length);
-    const clean = base.replace(/[^\p{L}\p{N}_-]+/gu, '-').replace(/^-+|-+$/g, '').slice(0, 60);
+// multer 1.x קורא את שם הקובץ מהבקשה כ-latin1, ולכן שם בעברית מגיע כג'יבריש.
+// הבתים עצמם תקינים — צריך רק לפרש אותם מחדש כ-UTF-8. שם באנגלית לא מושפע.
+export function decodeFileName(originalname: string) {
+    if (!originalname) return 'file';
+    try {
+        const decoded = Buffer.from(originalname, 'latin1').toString('utf8');
+        return decoded.includes('\uFFFD') ? originalname : decoded;
+    } catch {
+        return originalname;
+    }
+}
+
+// השם שנשמר ב-Cloudinary. רק אותיות אנגליות וספרות, כדי שהכתובת שנוצרת
+// תיפתח בכל מקום בלי קידוד. השם האמיתי, כולל עברית, נשמר בשדה filename.
+export function safePublicId(originalname: string) {
+    const name = decodeFileName(originalname);
+    const ext = extname(name);
+    const base = name.slice(0, name.length - ext.length);
+    const clean = base.replace(/[^A-Za-z0-9_-]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 60);
     const unique = `${Date.now()}-${Math.round(Math.random() * 1e6)}`;
-    return { clean: clean || 'file', ext: ext.replace('.', '').toLowerCase(), unique };
+    const safeExt = ext.replace('.', '').toLowerCase().replace(/[^a-z0-9]/g, '');
+    return { clean: clean || 'file', ext: safeExt, unique };
 }
 
 // אחסון Cloudinary.
