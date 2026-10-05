@@ -39,6 +39,16 @@ const cases = [
     expect: { source: 'separate-variables', cloudName: null },
   },
   {
+    name: 'a line pasted straight from the dashboard, name and all, still works',
+    env: { CLOUDINARY_URL: 'CLOUDINARY_URL=cloudinary://111122223333444:abcdefghijklmnopqrstuvwxyz1@my-cloud' },
+    expect: { source: 'CLOUDINARY_URL', cloudName: 'my-cloud', apiKeyTail: '3444', apiSecretLength: 27 },
+  },
+  {
+    name: 'an exported shell line works too',
+    env: { CLOUDINARY_URL: 'export CLOUDINARY_URL="cloudinary://111122223333444:abcdefghijklmnopqrstuvwxyz1@my-cloud"' },
+    expect: { source: 'CLOUDINARY_URL', cloudName: 'my-cloud', apiKeyTail: '3444', apiSecretLength: 27 },
+  },
+  {
     name: 'a url pasted with quotes and spaces is cleaned up, not rejected',
     env: { CLOUDINARY_URL: '  "cloudinary://111122223333444:abcdefghijklmnopqrstuvwxyz1@my-cloud"  ' },
     expect: { source: 'CLOUDINARY_URL', cloudName: 'my-cloud', apiKeyTail: '3444', apiSecretLength: 27 },

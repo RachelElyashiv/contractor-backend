@@ -6,7 +6,15 @@
 const raw = process.env.CLOUDINARY_URL;
 
 if (raw !== undefined) {
-    const trimmed = raw.trim().replace(/^['"]+|['"]+$/g, '');
+    const trimmed = raw
+        .trim()
+        // the Cloudinary dashboard copies the line including its own name,
+        // and a shell paste can carry an "export " in front of that
+        .replace(/^export\s+/i, '')
+        .replace(/^CLOUDINARY_URL\s*=\s*/i, '')
+        .trim()
+        .replace(/^['"]+|['"]+$/g, '')
+        .trim();
     if (trimmed.toLowerCase().startsWith('cloudinary://')) {
         process.env.CLOUDINARY_URL = trimmed;
     } else {
