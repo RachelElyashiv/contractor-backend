@@ -1,3 +1,4 @@
+import '../env-guard';
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { MulterModule } from '@nestjs/platform-express';
@@ -24,14 +25,34 @@ import { CloudinaryStorage } from 'multer-storage-cloudinary';
 
 // הגדרת Cloudinary מתוך משתני סביבה. נקראת מחדש בכל שימוש, כי סדר הטעינה
 // של המודולים לא מבטיח שמשתני הסביבה כבר קיימים ברגע שהקובץ הזה נטען.
+//
+// עדיף CLOUDINARY_URL: זו שורה אחת שמעתיקים כמו שהיא מלוח הבקרה של Cloudinary,
+// ולכן אי אפשר להצמיד בטעות מפתח של חשבון אחד לשם של חשבון אחר — וזו בדיוק
+// התקלה שהתקבלה כאן ("unknown api_key"). שלושת המשתנים הנפרדים נשארים כגיבוי.
+export function cloudinarySource() {
+    if (process.env.CLOUDINARY_URL) return 'CLOUDINARY_URL';
+    // env-guard removed a value that was not a cloudinary:// address
+    if (process.env.CLOUDINARY_URL_REJECTED) return 'CLOUDINARY_URL_INVALID';
+    return 'separate-variables';
+}
+
 function configureCloudinary() {
-    cloudinary.config({
-        cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-        api_key: process.env.CLOUDINARY_API_KEY,
-        api_secret: process.env.CLOUDINARY_API_SECRET,
-        secure: true,
-    });
-    return cloudinary.config();
+    try {
+        const settings: Record<string, string | boolean> = { secure: true };
+        if (cloudinarySource() === 'separate-variables') {
+            // רק ערכים שקיימים — ערך undefined היה דורס את מה שכבר נקרא
+            if (process.env.CLOUDINARY_CLOUD_NAME) settings.cloud_name = process.env.CLOUDINARY_CLOUD_NAME;
+            if (process.env.CLOUDINARY_API_KEY) settings.api_key = process.env.CLOUDINARY_API_KEY;
+            if (process.env.CLOUDINARY_API_SECRET) settings.api_secret = process.env.CLOUDINARY_API_SECRET;
+        }
+        cloudinary.config(settings);
+        return cloudinary.config();
+    } catch (e) {
+        // CLOUDINARY_URL פגום גורם ל-SDK לזרוק. בלי התפיסה הזאת השרת כולו
+        // לא היה עולה, והפריסה הייתה נכשלת בלי הסבר.
+        console.error('Cloudinary config error:', e?.message || e);
+        return {};
+    }
 }
 configureCloudinary();
 
@@ -194,11 +215,22 @@ export class UploadsHealthController {
         const cloudName = cfg.cloud_name || null;
         const apiKey = cfg.api_key ? String(cfg.api_key) : null;
         const apiSecret = cfg.api_secret ? String(cfg.api_secret) : null;
+        const source = cloudinarySource();
         const credentials = {
+            source,
             cloudName,
             apiKeyTail: apiKey ? apiKey.slice(-4) : null,
             apiSecretLength: apiSecret ? apiSecret.length : 0,
         };
+
+        if (source === 'CLOUDINARY_URL_INVALID') {
+            return {
+                ok: false,
+                reason: 'bad_cloudinary_url',
+                credentials,
+                message: 'CLOUDINARY_URL חייב להתחיל ב-cloudinary://',
+            };
+        }
 
         if (!cloudName || !apiKey || !apiSecret) {
             return {

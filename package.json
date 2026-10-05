@@ -6,7 +6,8 @@
     "build": "nest build",
     "start": "node dist/main.js",
     "start:dev": "npx ts-node -r tsconfig-paths/register src/main.ts",
-    "test:upload": "npm run build && node test/upload-check.js"
+    "test:upload": "npm run build && node test/upload-check.js",
+    "test:cloudinary": "npm run build && node test/cloudinary-url-check.js"
   },
   "dependencies": {
     "@nestjs/common": "^10.0.0",
