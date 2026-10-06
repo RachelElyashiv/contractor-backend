@@ -174,12 +174,38 @@ const png = Buffer.from(
     `status=${docx.status} public_id=${sent[0] && sent[0].opts.public_id} filename=${docx.body[0] && docx.body[0].filename}`,
   );
 
+  // the phone's native uploader sends one file per request and carries the
+  // name the person chose as a form field, because the part itself is named
+  // after a cache file
+  sent = [];
+  const named = await request(http)
+    .post('/api/v1/photos/upload')
+    .field('originalName', 'תוכנית חשמל קומה 2.pdf')
+    .field('caption', 'תוכנית')
+    .attach('files', pdf, { filename: 'DocumentPicker-9f3a1c.pdf', contentType: 'application/pdf' });
+  check(
+    'a single upload is stored under the name the person chose, not the cache name',
+    named.status === 201 && named.body[0].filename === 'תוכנית חשמל קומה 2.pdf',
+    `filename=${named.body[0] && named.body[0].filename}`,
+  );
+  check(
+    'that upload still goes up as raw with its extension',
+    sent[0] && sent[0].opts.resource_type === 'raw' && sent[0].opts.public_id.endsWith('.pdf'),
+    `opts=${JSON.stringify(sent[0] && sent[0].opts)}`,
+  );
+
   sent = [];
   const many = await request(http)
     .post('/api/v1/photos/upload')
+    .field('originalName', 'should-be-ignored.pdf')
     .attach('files', png, { filename: 'a.png', contentType: 'image/png' })
     .attach('files', png, { filename: 'b.png', contentType: 'image/png' })
     .attach('files', pdf, { filename: 'c.pdf', contentType: 'application/pdf' });
+  check(
+    'a batch ignores the single name and keeps each file its own',
+    many.status === 201 && many.body[0].filename === 'a.png' && many.body[2].filename === 'c.pdf',
+    `names=${many.body.map((r) => r.filename).join(', ')}`,
+  );
   check(
     'several files in one go, mixed photos and documents',
     many.status === 201 && many.body.length === 3 && sent.length === 3,

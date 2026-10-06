@@ -108,10 +108,14 @@ export class PhotosService {
         return this.repo.find({ where, order: { createdAt: 'DESC' } });
     }
 
-    async savePhotos(files: Express.Multer.File[], ownerId: string, projectId?: string, caption?: string, apartmentId?: string) {
+    async savePhotos(files: Express.Multer.File[], ownerId: string, projectId?: string, caption?: string, apartmentId?: string, originalName?: string) {
         const photos = files.map((file: any) =>
             this.repo.create({
-                filename: decodeFileName(file.originalname),
+                // the app sends the name the person actually chose; the name on
+                // the uploaded part is a cache name when the file came from a picker
+                filename: originalName && files.length === 1
+                    ? decodeFileName(originalName)
+                    : decodeFileName(file.originalname),
                 url: file.path,
                 publicId: file.filename,
                 ownerId,
@@ -293,11 +297,12 @@ export class PhotosController {
         @Body('projectId') projectId?: string,
         @Body('caption') caption?: string,
         @Body('apartmentId') apartmentId?: string,
+        @Body('originalName') originalName?: string,
     ) {
         if (!files || files.length === 0) {
             throw new BadRequestException('לא התקבל אף קובץ');
         }
-        return this.photosService.savePhotos(files, req.user.id, projectId, caption, apartmentId);
+        return this.photosService.savePhotos(files, req.user.id, projectId, caption, apartmentId, originalName);
     }
 
     @Delete(':id')
